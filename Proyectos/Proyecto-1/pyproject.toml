@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "a_star"
+version = "0.1.0"
+description = "Actividad numero 1 para Inteligencia Artificial, se necesita completar el codigo del algoritmo A*"
+authors = ["Hiram Abif Cornejo Cornejo <hiramcornejo10@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+opencv-python = "*"
+anaconda = "*"
+sift = "*"
+scikit-learn = "*"
+numpy = "*"
+pandas = "*"
+tensorflow = "*"
+pygame = "*"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
