@@ -15,6 +15,7 @@ Descripción del proceso de modelado
         - Posicion de las piezas aliadas
         - Posicion de las piezas enemigas
         - Tamaño del tablero
+            - Son posibles 400 entradas debido a tamaño del tablero de 20 * 20
 
     - #### Capas Oculta
         >[!WARNING]
@@ -25,16 +26,21 @@ Descripción del proceso de modelado
         
 
  - ## Definir los patrones a utilizar
+    - Movimientos del tablero
     - Alineacion de las piezas consecutivamente de 1 a 5.
     - Bloqueo de la alineacion de 5 piezas enemigas.
     - Oportunidades de alinear 5 piezas para ganar.
     - Posibles ahogamientos en donde ningun jugador pueda ganar.
     - Estrategias de posicionamiento.
 
->    - Definir que función de activación es necesaria para este problema
+- ## Definir que función de activación es necesaria para este problema
 
->    - Definir el numero máximo de entradas
-
->    - ¿Qué valores a la salida de la red se podrían esperar?
-
->    - ¿Cuales son los valores máximos que puede tener el bias?
+- ## Definir el numero máximo de entradas
+    <div align="justify">
+        El numero maximo de entradas está definido por la cantidadde cuadriculas del tablero. En este caso es un tablero de 20 * 20 por lo que serian 400 entradas.
+    </div>
+- ## ¿Qué valores a la salida de la red se podrían esperar?
+    <div align="justify">
+        Se podría esperar una matríz de 20 * 20 donde se represente la probabilidad de elegir cada una de las celdas por jugada.
+    </div>
+- ## ¿Cuales son los valores máximos que puede tener el bias?
