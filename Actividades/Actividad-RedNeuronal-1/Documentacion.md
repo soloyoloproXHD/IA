@@ -15,7 +15,6 @@ Descripción del proceso de modelado
         - Posicion de las piezas aliadas
         - Posicion de las piezas enemigas
         - Tamaño del tablero
-            - Son posibles 400 entradas debido a tamaño del tablero de 20 * 20
 
     - #### Capas Oculta
         >[!WARNING]
