@@ -33,6 +33,11 @@ Descripción del proceso de modelado
     - Estrategias de posicionamiento.
 
 - ## Definir que función de activación es necesaria para este problema
+    >[!WARNING]
+        No estoy seguro de que describir aquí.
+    Sigmoide?
+    ReLU?
+    Softmax?
 
 - ## Definir el numero máximo de entradas
     <div align="justify">
