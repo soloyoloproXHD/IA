@@ -83,11 +83,11 @@ class Nodo:
     #!-----------------------------------------------------------------------------
     def evaluar_v(self, grid, nodos_camino):
         self.vecinos = []
-        direcciones = [
+        direcciones = [ #Lista de tuplas que indican la direccion de movimiento y su costo
             (1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10),  # X, Y
             (1, 1, 14), (1, -1, 14), (-1, 1, 14), (-1, -1, 14) # Diagonales
         ]
-        for d in direcciones:
+        for d in direcciones: #Itero sobre todas las direcciones para encontrar la mejor opción
             nueva_fila = self.fila + d[0]
             nueva_col = self.col + d[1]
             if 0 <= nueva_fila < self.total_filas and 0 <= nueva_col < self.total_filas:
@@ -114,6 +114,7 @@ def h(p1, p2): #Heuristica usada: Manhattan (h(n) = |x1 - x2| + |y1 - y2|)
 def camino(nodos_camino, actual, dibujar): #Esta funcion reconstruirá el camino mas rapido encontrado
     while actual in nodos_camino:
         actual = nodos_camino[actual]
+        print(actual.get_pos())
         actual.hacer_camino()
         dibujar()
         pygame.time.delay(100)
@@ -151,7 +152,7 @@ def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
         
         nodo_actual.hacer_cerrado()
         dibujar()
-        pygame.time.delay(200)
+        pygame.time.delay(100)
         
     return print("No hay camino") # En caso de no encontrar un camino, se mostrara el mensaje en consola
 #!-----------------------------------------------------------------------------       
@@ -191,7 +192,7 @@ def obtener_click_pos(pos, filas, ancho):
 
 def main(ventana, ancho):
     global fin
-    FILAS = 10
+    FILAS = 11
     grid = crear_grid(FILAS, ancho)
 
     inicio = None
@@ -229,7 +230,7 @@ def main(ventana, ancho):
                     inicio = None
                 elif nodo == fin:
                     fin = None
-            
+#!-----------------------------------------------------------------------------             
             if event.type == pygame.KEYDOWN: #Mapeo de eventos de teclado para ejecutar el algoritmo
                 if event.key == pygame.K_KP_ENTER and inicio and fin: #Se estableció la tecla Enter para ejecutar la funcion a_estrella
                     a_estrella(lambda: dibujar(ventana, grid, FILAS, ancho), grid, inicio, fin)
@@ -237,7 +238,7 @@ def main(ventana, ancho):
                     grid = crear_grid(FILAS, ancho)
                     inicio = None
                     fin = None
-
+#!----------------------------------------------------------------------------- 
     pygame.quit()
 
 main(VENTANA, ANCHO_VENTANA)
