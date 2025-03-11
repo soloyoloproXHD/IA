@@ -104,9 +104,9 @@ class Nodo:
                         
 #!-----------------------------------------------------------------------------
 def h(p1, p2): #Heuristica usada: Manhattan (h(n) = |x1 - x2| + |y1 - y2|)
-    x1, y1 = p1.get_pos()
-    x2, y2 = p2.get_pos()
-    h = (abs(x1 - x2) + abs(y1 - y2)) * 10
+    X1, Y1 = p1.get_pos()
+    X2, Y2 = p2.get_pos()
+    h = (abs(X1 - X2) + abs(Y1 - Y2)) * 10
     # h = math.sqrt((x2-x1)**2 + (y2-y1)**2) * 10
     print(h)
     return h
