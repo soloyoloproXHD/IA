@@ -1,4 +1,5 @@
 import pygame
+import math
 
 ANCHO_VENTANA = 800
 VENTANA = pygame.display.set_mode((ANCHO_VENTANA, ANCHO_VENTANA))
@@ -28,9 +29,9 @@ class Nodo:
         self.ancho = ancho
         self.total_filas = total_filas
         self.vecinos = []
-        self.g = float()
-        self.h = float()
-        self.f = float()
+        self.g = float("inf")
+        self.h = float("inf")
+        self.f = float("inf")
     
     def get_pos(self):
         return self.fila, self.col
@@ -46,6 +47,9 @@ class Nodo:
     
     def restablecer(self):
         self.color = BLANCO
+        self.g = float("inf")
+        self.h = float("inf")
+        self.h = float("inf")
     
     def hacer_inicio(self):
         self.color = NARANJA
@@ -64,21 +68,20 @@ class Nodo:
     
     def hacer_camino(self):
         self.color = VERDE
-    
-    def reset(self):
-        self.color = BLANCO
-        self.g, self.h, self.f = float()
-        
+    #!-----------------------------------------------------------------------------
     def dibujar(self, ventana):
         pygame.draw.rect(ventana, self.color, (self.x, self.y, self.ancho, self.ancho))
+        
+        if self.color == VERDE:
+            pygame.draw.rect(ventana, NEGRO, (self.x, self.y, self.ancho, self.ancho), width=3)
         
         if self.color not in [BLANCO, NEGRO]:
             g, h, f = (("0" if x == float("inf") else int(x)) for x in (self.g, self.h, self.f))
             
             for i, (label, value) in enumerate(zip("ghf", (g,h,f))):
                 ventana.blit(FUENTE.render(f"{label}: {value}", True, NEGRO), (self.x + 5, self.y + 5 + i * 15))
-    
-    def actualizar_vecinos(self, grid, nodos_camino):
+    #!-----------------------------------------------------------------------------
+    def evaluar_v(self, grid, nodos_camino):
         self.vecinos = []
         direcciones = [
             (1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10),  # X, Y
@@ -101,22 +104,22 @@ class Nodo:
                         
 #!-----------------------------------------------------------------------------
 def h(p1, p2): #Heuristica usada: Manhattan (h(n) = |x1 - x2| + |y1 - y2|)
-    X1, Y1 = p1.get_pos()
-    X2, Y2 = p2.get_pos()
-    h = (abs(X1 - X2) + abs(Y1 - Y2)) * 10
+    x1, y1 = p1.get_pos()
+    x2, y2 = p2.get_pos()
+    h = (abs(x1 - x2) + abs(y1 - y2)) * 10
+    # h = math.sqrt((x2-x1)**2 + (y2-y1)**2) * 10
     print(h)
     return h
 
-def camino(nodos_camino, actual, dibujar):
+def camino(nodos_camino, actual, dibujar): #Esta funcion reconstruirá el camino mas rapido encontrado
     while actual in nodos_camino:
         actual = nodos_camino[actual]
         actual.hacer_camino()
         dibujar()
-        pygame.time.delay(200)
+        pygame.time.delay(100)
 
-def a_estrella(dibujar, grid, inicio, fin):
+def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
     nodos_camino = {}
-    
     inicio.g = 0
     inicio.h = h(inicio, fin)
     inicio.f = inicio.g + inicio.h
@@ -125,37 +128,33 @@ def a_estrella(dibujar, grid, inicio, fin):
     
     while lista_abierta:
         lista_abierta.sort(key=lambda nodo: nodo.f)
-        actual = lista_abierta.pop(0)
+        nodo_actual = lista_abierta.pop(0)
         
-        actual.color = ROJO
-        dibujar()
-        pygame.time.delay(10)
-        
-        if actual == fin:
-            camino(nodos_camino, actual, dibujar) #Esta funcion debe de mostrar el camino mas rapido encontrado
+        if nodo_actual == fin:
+            camino(nodos_camino, nodo_actual, dibujar) #Esta funcion debe de mostrar el camino mas rapido encontrado
             return True
         
         
-        actual.actualizar_vecinos(grid, nodos_camino)
-        for vecino in actual.vecinos:
+        nodo_actual.evaluar_v(grid, nodos_camino) #Esta función deve de evaluar los vecinos del nodo actual para encontrar el camino mas rapido
+        for vecino in nodo_actual.vecinos:
             if vecino == fin:
-                nodos_camino[vecino] = actual
+                nodos_camino[vecino] = nodo_actual
                 camino(nodos_camino, vecino, dibujar)
+                fin.hacer_camino()
                 return True
             
-            if vecino.color not in [NARANJA, AZUL, ROJO]:  
+            if vecino.color not in [NARANJA, AZUL]:  
                 vecino.hacer_abierto()
                 if vecino not in lista_abierta:
                     lista_abierta.append(vecino)
-                
-                nodos_camino[vecino] = actual
+                nodos_camino[vecino] = nodo_actual
         
-        actual.hacer_cerrado()
+        nodo_actual.hacer_cerrado()
         dibujar()
         pygame.time.delay(200)
         
-    return print("No hay camino")
-            
+    return print("No hay camino") # En caso de no encontrar un camino, se mostrara el mensaje en consola
+#!-----------------------------------------------------------------------------       
 def crear_grid(filas, ancho):
     grid = []
     ancho_nodo = ancho // filas
@@ -231,10 +230,10 @@ def main(ventana, ancho):
                 elif nodo == fin:
                     fin = None
             
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_KP_ENTER and inicio and fin:
+            if event.type == pygame.KEYDOWN: #Mapeo de eventos de teclado para ejecutar el algoritmo
+                if event.key == pygame.K_KP_ENTER and inicio and fin: #Se estableció la tecla Enter para ejecutar la funcion a_estrella
                     a_estrella(lambda: dibujar(ventana, grid, FILAS, ancho), grid, inicio, fin)
-                elif event.key == pygame.K_ESCAPE:
+                elif event.key == pygame.K_ESCAPE: #Se estableció la tecla Escape para reiniciar el grid
                     grid = crear_grid(FILAS, ancho)
                     inicio = None
                     fin = None
