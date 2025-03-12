@@ -73,6 +73,8 @@ class Nodo:
         
         if self.color == VERDE:
             pygame.draw.rect(ventana, NEGRO, (self.x, self.y, self.ancho, self.ancho), width=3)
+        elif self.color == GRIS:
+            pygame.draw.rect(ventana, BLANCO, (self.x, self.y, self.ancho, self.ancho), width=3)
         
         if self.color not in [BLANCO, NEGRO]:
             g, h, f = (("0" if x == float("inf") else int(x)) for x in (self.g, self.h, self.f))
@@ -83,7 +85,7 @@ class Nodo:
     def evaluar_v(self, grid, nodos_camino):
         self.vecinos = []
         direcciones = [ #Lista de tuplas que indican la direccion de movimiento y su costo
-            (1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10),  # X, Y
+            (1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10),  # Derecha, Izquierda, Abajo y Arriba
             (1, 1, 14), (1, -1, 14), (-1, 1, 14), (-1, -1, 14) # Diagonales
         ]
         for d in direcciones: #Itero sobre todas las direcciones para encontrar la mejor opción
@@ -92,6 +94,13 @@ class Nodo:
             if 0 <= nueva_fila < self.total_filas and 0 <= nueva_col < self.total_filas:
                 vecino = grid[nueva_fila][nueva_col]
                 if not vecino.es_pared():
+                    
+                    if d[0] != 0 and d[1] != 0: #Validación de movimientos diagonales en caso de que este se bloquee por 2 paredes
+                        pared_vertical = grid[nueva_fila][self.col].es_pared()
+                        pared_horizontal = grid[self.fila][nueva_col].es_pared()
+                        if pared_vertical and pared_horizontal:
+                            continue
+
                     costo_g = self.g + d[2]
                     if costo_g < vecino.g:
                         vecino.g = costo_g
@@ -114,9 +123,11 @@ def camino(nodos_camino, actual, dibujar): #Esta funcion reconstruirá el camino
     while actual in nodos_camino:
         actual = nodos_camino[actual]
         print(actual.get_pos())
-        actual.hacer_camino()
-        dibujar()
+        if actual != inicio:    
+            actual.hacer_camino()
+            dibujar()
         pygame.time.delay(100)
+    return print("Camino encontrado")
 
 def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
     nodos_camino = {}
@@ -130,17 +141,12 @@ def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
         lista_abierta.sort(key=lambda nodo: nodo.f)
         nodo_actual = lista_abierta.pop(0)
         
-        if nodo_actual == fin:
-            camino(nodos_camino, nodo_actual, dibujar) #Esta funcion debe de mostrar el camino mas rapido encontrado
-            return True
-        
-        
         nodo_actual.evaluar_v(grid, nodos_camino) #Esta función deve de evaluar los vecinos del nodo actual para encontrar el camino mas rapido
+        
         for vecino in nodo_actual.vecinos:
             if vecino == fin:
                 nodos_camino[vecino] = nodo_actual
                 camino(nodos_camino, vecino, dibujar)
-                fin.hacer_camino()
                 return True
             
             if vecino.color not in [NARANJA, AZUL]:  
@@ -148,12 +154,14 @@ def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
                 if vecino not in lista_abierta:
                     lista_abierta.append(vecino)
                 nodos_camino[vecino] = nodo_actual
-        
-        nodo_actual.hacer_cerrado()
-        dibujar()
-        
-    return print("No hay camino") # En caso de no encontrar un camino, se mostrara el mensaje en consola
-#!-----------------------------------------------------------------------------       
+                
+        if nodo_actual != inicio:
+            nodo_actual.hacer_cerrado()
+            dibujar()
+    
+    return print("No se ha encontrado un camino")
+#!-----------------------------------------------------------------------------   
+    
 def crear_grid(filas, ancho):
     grid = []
     ancho_nodo = ancho // filas
@@ -190,6 +198,7 @@ def obtener_click_pos(pos, filas, ancho):
 
 def main(ventana, ancho):
     global fin
+    global inicio
     FILAS = 11
     grid = crear_grid(FILAS, ancho)
 

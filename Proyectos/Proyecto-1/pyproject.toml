@@ -5,7 +5,7 @@ description = "Actividad numero 1 para Inteligencia Artificial, se necesita comp
 authors = ["Hiram Abif Cornejo Cornejo <hiramcornejo10@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.12"
 opencv-contrib-python = "*"
 anaconda = "*"
 sift = "*"
