@@ -1,19 +1,18 @@
 [tool.poetry]
-name = "a_star"
+name = "game"
 version = "0.1.0"
-description = "Actividad numero 1 para Inteligencia Artificial, se necesita completar el codigo del algoritmo A*"
+description = "Proyecto numero 2 para Inteligencia Artificial, en el proyecto de Phaser con python será necesario"
 authors = ["Hiram Abif Cornejo Cornejo <hiramcornejo10@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 opencv-contrib-python = "*"
-anaconda = "*"
 sift = "*"
 scikit-learn = "*"
 numpy = "*"
 pandas = "*"
-tensorflow = "*"
 pygame = "*"
+matplotlib = "*"
 
 
 [build-system]

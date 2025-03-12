@@ -1,5 +1,4 @@
 import pygame
-import math
 
 ANCHO_VENTANA = 800
 VENTANA = pygame.display.set_mode((ANCHO_VENTANA, ANCHO_VENTANA))
@@ -152,7 +151,6 @@ def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
         
         nodo_actual.hacer_cerrado()
         dibujar()
-        pygame.time.delay(100)
         
     return print("No hay camino") # En caso de no encontrar un camino, se mostrara el mensaje en consola
 #!-----------------------------------------------------------------------------       
