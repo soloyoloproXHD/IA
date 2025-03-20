@@ -149,7 +149,7 @@ def a_estrella(dibujar, grid, inicio, fin): #Algoritmo de busqueda A*
                 camino(nodos_camino, vecino, dibujar)
                 return True
             
-            if vecino.color not in [NARANJA, AZUL]:  
+            if vecino.color not in [NARANJA, GRIS, AZUL, PURPURA]:  
                 vecino.hacer_abierto()
                 if vecino not in lista_abierta:
                     lista_abierta.append(vecino)

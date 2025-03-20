@@ -1,5 +1,6 @@
 import pygame
 import random
+import cv2 as cv
 
 # Inicializar Pygame
 pygame.init()
@@ -22,7 +23,7 @@ menu = None
 
 # Variables de salto
 salto = False
-salto_altura = 15  # Velocidad inicial de salto
+salto_altura = 17  # Velocidad inicial de salto
 gravedad = 1
 en_suelo = True
 
@@ -35,26 +36,25 @@ modo_auto = False  # Indica si el modo de juego es automático
 # Lista para guardar los datos de velocidad, distancia y salto (target)
 datos_modelo = []
 
-frames = 6
-w_frame = 64
-h_frame = 80
+run_img = pygame.image.load('assets/knight/Knight_1/Run.png')
 
-def cargar_asset(ruta, num_frames, ancho, alto):
-    imagen = pygame.image.load(ruta).convert_alpha()
-    frames = []
-    
-    for i in range(num_frames):
-        frame = imagen.subsurface(pygame.Rect(i * ancho, 0 , ancho, alto))
-        frames.append(frame)
+w_p, w_d = 71, 55
+h_p, h_d = 86, 50
+n_f = 7
 
-    return frames
 
 # Cargar las imágenes
-jugador_frames = cargar_asset('assets/knight/Knight_1/Run.png', frames, w_frame, h_frame)
+jugador_frames = []
+for i in range(n_f):
+    frame = run_img.subsurface(pygame.Rect(i * w_p, 0, w_p, h_p))
+    jugador_frames.append(frame)
+
 
 bala_img = pygame.image.load('assets/sprites/purple_ball.png')
-fondo_img = pygame.image.load('assets/game/fondo2.png')
-nave_img = pygame.image.load('assets/game/ufo.png')
+fondo_img = pygame.image.load('assets/game/sky_bridge.png')
+img = pygame.image.load('assets/game/dragon.png')
+nave_img = img.subsurface(pygame.Rect(65, 60, w_d,h_d))
+nave_img = pygame.transform.scale(nave_img, (w_d * 1.5, h_d * 1.5))
 menu_img = pygame.image.load('assets/game/menu.png')
 
 # Escalar la imagen de fondo para que coincida con el tamaño de la pantalla
@@ -68,7 +68,7 @@ menu_rect = pygame.Rect(w // 2 - 135, h // 2 - 90, 270, 180)  # Tamaño del men�
 
 # Variables para la animación del jugador
 current_frame = 0
-frame_speed = 10  # Cuántos frames antes de cambiar a la siguiente imagen
+frame_speed = 15  # Cuántos frames antes de cambiar a la siguiente imagen
 frame_count = 0
 
 # Variables para la bala
@@ -104,7 +104,7 @@ def manejar_salto():
         if jugador.y >= h - 100:
             jugador.y = h - 100
             salto = False
-            salto_altura = 15  # Restablecer la velocidad de salto
+            salto_altura = 17  # Restablecer la velocidad de salto
             en_suelo = True
 
 # Función para actualizar el juego
@@ -247,7 +247,7 @@ def main():
 
         # Actualizar la pantalla
         pygame.display.flip()
-        reloj.tick(30)  # Limitar el juego a 30 FPS
+        reloj.tick(60)  # Limitar el juego a 30 FPS
 
     pygame.quit()
 
