@@ -1,4 +1,4 @@
-opencv-python
+opencv-python-contrib
 anaConda
 Sift
 scikit-learn
@@ -6,3 +6,4 @@ Numpy
 Pandas
 Tensorflow
 pygame
+mediapipe
