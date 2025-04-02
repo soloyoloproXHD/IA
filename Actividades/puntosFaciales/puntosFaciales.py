@@ -11,7 +11,7 @@ face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=2,
 cap = cv2.VideoCapture(0)
 
 # Lista de índices de landmarks específicos (ojos, boca, cejas y nariz)
-selected_points = [33, 133, 468, 362, 263, 473, 61, 291, 70, 105, 107, 336, 334, 300, 4, 48, 278, 8]  # Ojos, boca, cejas y nariz
+selected_points = [33, 133, 362, 263, 61, 291, 70, 105, 107, 336, 334, 300, 4, 48, 278, 8]  # Ojos, boca, cejas y nariz
 
 def distancia(p1, p2):
     """Calcula la distancia euclidiana entre dos puntos."""
@@ -37,12 +37,12 @@ while cap.isOpened():
                 cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)  # Dibuja el punto en verde
             
             # Calcular y mostrar distancias entre puntos clave
-            if all(idx in puntos for idx in [33, 133, 362, 263, 61, 291, 4, 8, 105, 334]):
+            if all(idx in puntos for idx in selected_points):
                 d_ojo_izq = distancia(puntos[33], puntos[133])
                 d_ojo_der = distancia(puntos[362], puntos[263])
                 d_boca = distancia(puntos[61], puntos[291])
-                d_ceja_izq = distancia(puntos[105], puntos[33])
-                d_ceja_der = distancia(puntos[334], puntos[362])
+                d_ceja_izq = distancia(puntos[70], puntos[107])
+                d_ceja_der = distancia(puntos[300], puntos[336])
                 d_nariz = distancia(puntos[4], puntos[8])
                 
                 # Calcular proporciones
@@ -64,8 +64,6 @@ while cap.isOpened():
                 cv2.line(frame, puntos[33], puntos[133], (23, 255, 23), 2)  # Ojo izquierdo
                 cv2.line(frame, puntos[362], puntos[263], (23, 255, 23), 2)  # Ojo derecho
                 cv2.line(frame, puntos[61], puntos[291], (23, 255, 23), 2)  # Boca
-                cv2.line(frame, puntos[105], puntos[33], (255, 0, 0), 2)  # Ceja izquierda
-                cv2.line(frame, puntos[334], puntos[362], (255, 0, 0), 2)  # Ceja derecha
                 cv2.line(frame, puntos[4], puntos[8], (0, 255, 255), 2)  # Nariz
 
     cv2.imshow('PuntosFacialesMediaPipe', frame)
