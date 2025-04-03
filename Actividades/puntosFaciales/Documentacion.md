@@ -30,3 +30,13 @@
 >   - Pupilas (Estas pueden ser usadas para determinar si es algo vivo lo que se está capturando)
 
 ## ¿Cual sería una de las mejores estrategias para que un sistema de reconocimiento facial no sea violado?
+
+
+## ¿Qué parametros utilizé para detectar emociones?
+
+- Distancia Horizontal Boca
+- Distancia Vertical Boca
+- Distancia Seja a Ojo Izq
+- Distancia Seja Ojo Der
+-   Realmente utilizo el promedio entre Distancia Seja a Ojo Izq y Distancia Seja Ojo Der
+    - Promedio Sejas a Ojos

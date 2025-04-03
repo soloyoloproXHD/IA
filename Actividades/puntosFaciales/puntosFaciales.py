@@ -80,7 +80,7 @@ while cap.isOpened():
                     x_ojo_der, y_ojo_der = puntos[362]
 
                     
-                    # Coordenadas relativas de los puntos de la boca
+                    # Coordenadas relativas de los puntos
                     x_relativo_boca_izq = (x_boca_izq - x_min) / ancho_facial
                     y_relativo_boca_izq = (y_boca_izq - y_min) / alto_facial
                     x_relativo_boca_der = (x_boca_der - x_min) / ancho_facial
@@ -103,7 +103,7 @@ while cap.isOpened():
                     
                     
                     
-                    # Calcular distancias horizontal entre los puntos de la boca
+                    # Calcular distancias horizontal o vertical entre los puntos
                     distancia_horizontal_boca = abs(x_relativo_boca_der - x_relativo_boca_izq)
                     distancia_vertical_boca = abs(y_relativo_labio_sup - y_relativo_labio_inf) #Se calcula respecto de los labios
                     distancia_seja_ojo_izq = abs(y_relativo_seja_izq - y_relativo_ojo_izq)
@@ -112,6 +112,8 @@ while cap.isOpened():
                     promedio_seja_ojo = (distancia_seja_ojo_izq + distancia_seja_ojo_der) / 2
                     
                     # Depuración: Imprimir valores
+                    print(f"Ancho Facial: {ancho_facial}")
+                    print(f"Alto Facial: {alto_facial}")
                     print(f"Distancia Horizontal Boca: {distancia_horizontal_boca}")
                     print(f"Distancia Vertical Boca: {distancia_vertical_boca}")
                     print(f"Distancia Seja Ojo Izq: {distancia_seja_ojo_izq}")
@@ -121,11 +123,11 @@ while cap.isOpened():
                     # Clasificar la expresión facial
                     if distancia_horizontal_boca > 0.50:  # Umbral para sonrisa
                         emocion = "Feliz"
-                    elif distancia_horizontal_boca < 0.45 and promedio_seja_ojo > 0.24:  # Umbral para tristeza
+                    elif distancia_horizontal_boca < 0.45 and promedio_seja_ojo > 0.24:
                         emocion = "Triste"
-                    elif distancia_vertical_boca > 0.10 and promedio_seja_ojo > 0.24:  # Umbral para sorpresa
+                    elif distancia_vertical_boca > 0.10 and promedio_seja_ojo > 0.24:
                         emocion = "Sorpresa"
-                    elif distancia_vertical_boca < 0.45 and promedio_seja_ojo < 0.24:  # Umbral para enojo
+                    elif distancia_vertical_boca < 0.45 and promedio_seja_ojo < 0.24: 
                         emocion = "Enojo"
                     else:
                         emocion = "Neutral"
