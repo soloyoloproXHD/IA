@@ -1,6 +1,7 @@
 import pygame
 import random
 import cv2 as cv
+from arbolDecision import generar_arbol
 
 # Inicializar Pygame
 pygame.init()
@@ -47,6 +48,7 @@ n_f = 7
 jugador_frames = []
 for i in range(n_f):
     frame = run_img.subsurface(pygame.Rect(i * w_p, 0, w_p, h_p))
+    frame = pygame.transform.scale(frame, (w_p * 2, h_p * 2))  # Escalar el frame al doble de tamaño
     jugador_frames.append(frame)
 
 
@@ -78,6 +80,10 @@ bala_disparada = False
 # Variables para el fondo en movimiento
 fondo_x1 = 0
 fondo_x2 = w
+
+# Ajustar el desplazamiento para alinear el asset con la hitbox
+offset_x = (jugador.width - w_p * 2) // 2  # Centrar horizontalmente
+offset_y = jugador.height - h_p * 2       # Ajustar verticalmente
 
 # Función para disparar la bala
 def disparar_bala():
@@ -133,8 +139,8 @@ def update():
         current_frame = (current_frame + 1) % len(jugador_frames)
         frame_count = 0
 
-    # Dibujar el jugador con la animación
-    pantalla.blit(jugador_frames[current_frame], (jugador.x, jugador.y))
+    # Dibujar el jugador con la animación, aplicando el desplazamiento
+    pantalla.blit(jugador_frames[current_frame], (jugador.x + offset_x, jugador.y + offset_y))
 
     # Dibujar la nave
     pantalla.blit(nave_img, (nave.x, nave.y))
@@ -157,10 +163,10 @@ def update():
 # Función para guardar datos del modelo en modo manual
 def guardar_datos():
     global jugador, bala, velocidad_bala, salto
-    distancia = abs(jugador.x - bala.x)
+    distancia = abs(jugador.x - bala.x)  # Distancia entre el jugador y la bala
     salto_hecho = 1 if salto else 0  # 1 si saltó, 0 si no saltó
     # Guardar velocidad de la bala, distancia al jugador y si saltó o no
-    datos_modelo.append((velocidad_bala, distancia, salto_hecho))
+    datos_modelo.append([velocidad_bala, distancia, salto_hecho])
 
 # Función para pausar el juego y guardar los datos
 def pausa_juego():
@@ -196,6 +202,17 @@ def mostrar_menu():
                     pygame.quit()
                     exit()
 
+# Función para generar el árbol de decisión al finalizar el juego
+def generar_arbol_decision():
+    global datos_modelo
+    if not datos_modelo:
+        print("No hay datos suficientes para generar el árbol de decisión.")
+        return
+    columnas = [ "Distancia", "Salto"]
+    clases = ["No Salta", "Salta"]
+    print("Datos recopilados para el modelo:", datos_modelo)  # Verificar los datos
+    generar_arbol(datos_modelo, columnas, clases)
+
 # Función para reiniciar el juego tras la colisión
 def reiniciar_juego():
     global menu_activo, jugador, bala, nave, bala_disparada, salto, en_suelo
@@ -208,6 +225,7 @@ def reiniciar_juego():
     en_suelo = True
     # Mostrar los datos recopilados hasta el momento
     print("Datos recopilados para el modelo: ", datos_modelo)
+    generar_arbol_decision()  # Generar el árbol de decisión
     mostrar_menu()  # Mostrar el menú de nuevo para seleccionar modo
 
 def main():
