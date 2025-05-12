@@ -40,3 +40,5 @@
 - Distancia Seja Ojo Der
 -   Realmente utilizo el promedio entre Distancia Seja a Ojo Izq y Distancia Seja Ojo Der
     - Promedio Sejas a Ojos
+
+Las distancias se calculan en base a los puntos relativos definidos en el área facial detectada.

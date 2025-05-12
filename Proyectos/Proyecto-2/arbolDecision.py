@@ -23,7 +23,7 @@ def generar_arbol(datos, columnas, clases):
     graph = graphviz.Source(dot_data)
 
     # Guardar el gráfico como un archivo PDF (opcional)
-    graph.render("arboles/decision_tree3")
+    graph.render("arboles/decision_treeT")
 
     # Mostrar el gráfico directamente
     graph.view()

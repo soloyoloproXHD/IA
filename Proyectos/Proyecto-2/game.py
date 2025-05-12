@@ -7,7 +7,7 @@ from arbolDecision import generar_arbol
 pygame.init()
 
 # Dimensiones de la pantalla
-w, h = 800, 400
+w, h = 1280, 720
 pantalla = pygame.display.set_mode((w, h))
 pygame.display.set_caption("Juego: Disparo de Bala, Salto, Nave y Menú")
 
@@ -21,6 +21,8 @@ bala = None
 fondo = None
 nave = None
 menu = None
+
+velocidad_jugador = 5
 
 # Variables de salto
 salto = False
@@ -43,19 +45,18 @@ w_p, w_d = 71, 55
 h_p, h_d = 86, 50
 n_f = 7
 
-
 # Cargar las imágenes
 jugador_frames = []
 for i in range(n_f):
     frame = run_img.subsurface(pygame.Rect(i * w_p, 0, w_p, h_p))
-    frame = pygame.transform.scale(frame, (w_p * 2, h_p * 2))  # Escalar el frame al doble de tamaño
+    # Escalamos ahora a (w_p, h_p) en lugar de (w_p*2, h_p*2)
+    frame = pygame.transform.scale(frame, (w_p, h_p))
     jugador_frames.append(frame)
-
 
 bala_img = pygame.image.load('assets/sprites/purple_ball.png')
 fondo_img = pygame.image.load('assets/game/sky_bridge.png')
 img = pygame.image.load('assets/game/dragon.png')
-nave_img = img.subsurface(pygame.Rect(65, 60, w_d,h_d))
+nave_img = img.subsurface(pygame.Rect(65, 60, w_d, h_d))
 nave_img = pygame.transform.scale(nave_img, (w_d * 1.5, h_d * 1.5))
 menu_img = pygame.image.load('assets/game/menu.png')
 
@@ -81,9 +82,9 @@ bala_disparada = False
 fondo_x1 = 0
 fondo_x2 = w
 
-# Ajustar el desplazamiento para alinear el asset con la hitbox
-offset_x = (jugador.width - w_p * 2) // 2  # Centrar horizontalmente
-offset_y = jugador.height - h_p * 2       # Ajustar verticalmente
+# Ajustar el desplazamiento para centrar el asset en la hitbox sin mover la posición:
+offset_x = (jugador.width - w_p) // 2
+offset_y = jugador.height - h_p
 
 # Función para disparar la bala
 def disparar_bala():
@@ -251,12 +252,21 @@ def main():
                     exit()
 
         if not pausa:
-            # Modo manual: el jugador controla el salto
+            # Modo manual: el jugador controla el movimiento del personaje
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]:
+                jugador.x = max(0, jugador.x - velocidad_jugador)
+            if keys[pygame.K_RIGHT]:
+                jugador.x = min(w - jugador.width, jugador.x + velocidad_jugador)
+            
             if not modo_auto:
                 if salto:
                     manejar_salto()
                 # Guardar los datos si estamos en modo manual
                 guardar_datos()
+            else:
+                #logica del modo auto
+                pass
 
             # Actualizar el juego
             if not bala_disparada:
