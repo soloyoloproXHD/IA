@@ -14,6 +14,7 @@ pygame.display.set_caption("Juego: Disparo de Bala, Salto, Nave y Menú")
 # Colores
 BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
+GRIS = '#1E1E1E'
 
 # Variables del jugador, bala, nave, fondo, etc.
 jugador = None
@@ -54,6 +55,7 @@ for i in range(n_f):
     jugador_frames.append(frame)
 
 bala_img = pygame.image.load('assets/sprites/purple_ball.png')
+bala2_img = pygame.image.load('assets/sprites/purple_ball.png')
 fondo_img = pygame.image.load('assets/game/sky_bridge.png')
 img = pygame.image.load('assets/game/dragon.png')
 nave_img = img.subsurface(pygame.Rect(65, 60, w_d, h_d))
@@ -66,6 +68,7 @@ fondo_img = pygame.transform.scale(fondo_img, (w, h))
 # Crear el rectángulo del jugador y de la bala
 jugador = pygame.Rect(50, h - 100, 32, 48)
 bala = pygame.Rect(w - 50, h - 90, 16, 16)
+bala2 = pygame.Rect(w//16, h//8, 16, 16)
 nave = pygame.Rect(w - 100, h - 100, 64, 64)
 menu_rect = pygame.Rect(w // 2 - 135, h // 2 - 90, 270, 180)  # Tamaño del menú
 
@@ -77,6 +80,9 @@ frame_count = 0
 # Variables para la bala
 velocidad_bala = -10  # Velocidad de la bala hacia la izquierda
 bala_disparada = False
+
+velocidad_bala2 = 8
+bala_disparada2 = False
 
 # Variables para el fondo en movimiento
 fondo_x1 = 0
@@ -93,11 +99,22 @@ def disparar_bala():
         velocidad_bala = random.randint(-8, -3)  # Velocidad aleatoria negativa para la bala
         bala_disparada = True
 
+def disparar_segunda_bala():
+    global bala_disparada2, velocidad_bala2
+    if not bala_disparada2:
+        bala_disparada2 = True
+
 # Función para reiniciar la posición de la bala
 def reset_bala():
     global bala, bala_disparada
     bala.x = w - 50  # Reiniciar la posición de la bala
     bala_disparada = False
+    
+def reset_bala2():
+    global bala2, bala_disparada2
+    # Reiniciar la posición de la segunda bala
+    bala2.y = h//8
+    bala_disparada2 = False
 
 # Función para manejar el salto
 def manejar_salto():
@@ -116,7 +133,7 @@ def manejar_salto():
 
 # Función para actualizar el juego
 def update():
-    global bala, velocidad_bala, current_frame, frame_count, fondo_x1, fondo_x2
+    global bala, bala2, velocidad_bala, velocidad_bala2, current_frame, frame_count, fondo_x1, fondo_x2
 
     # Mover el fondo
     fondo_x1 -= 1
@@ -149,17 +166,25 @@ def update():
     # Mover y dibujar la bala
     if bala_disparada:
         bala.x += velocidad_bala
+    if bala_disparada2:
+        bala2.y += velocidad_bala2
 
     # Si la bala sale de la pantalla, reiniciar su posición
     if bala.x < 0:
         reset_bala()
+    if bala2.y > h:
+        reset_bala2()
 
     pantalla.blit(bala_img, (bala.x, bala.y))
+    pantalla.blit(bala2_img, (bala2.x, bala2.y))
 
     # Colisión entre la bala y el jugador
     if jugador.colliderect(bala):
         print("Colisión detectada!")
         reiniciar_juego()  # Terminar el juego y mostrar el menú
+    if jugador.colliderect(bala2):
+        print("Colisión detectada!")
+        reiniciar_juego()
 
 # Función para guardar datos del modelo en modo manual
 def guardar_datos():
@@ -193,8 +218,9 @@ def mostrar_menu():
                 exit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_a:
-                    modo_auto = True
-                    menu_activo = False
+                    #modo_auto = True
+                    #menu_activo = False
+                    menu_modelos()
                 elif evento.key == pygame.K_m:
                     modo_auto = False
                     menu_activo = False
@@ -203,6 +229,18 @@ def mostrar_menu():
                     pygame.quit()
                     exit()
 
+def menu_modelos():
+    pantalla.fill(GRIS)
+    modelo1 = fuente.render("1.- Red Neuronal", True, BLANCO)
+    modelo2 = fuente.render("2.- Arbol de Desición", True, BLANCO)
+    modelo3 = fuente.render("3.- Regresión Lineal", True, BLANCO)
+    modelo4 = fuente.render("4.- K Neighborn", True, BLANCO)
+    pantalla.blit(modelo1, (w//4, h//5.5))
+    pantalla.blit(modelo2, (w//4, h//4))
+    pantalla.blit(modelo3, (w//4, h//3))
+    pantalla.blit(modelo4, (w//4, h//2.5))
+    pygame.display.flip()
+    
 # Función para generar el árbol de decisión al finalizar el juego
 def generar_arbol_decision():
     global datos_modelo
@@ -212,7 +250,7 @@ def generar_arbol_decision():
     columnas = [ "Distancia", "Salto"]
     clases = ["No Salta", "Salta"]
     print("Datos recopilados para el modelo:", datos_modelo)  # Verificar los datos
-    generar_arbol(datos_modelo, columnas, clases)
+    #generar_arbol(datos_modelo, columnas, clases)
 
 # Función para reiniciar el juego tras la colisión
 def reiniciar_juego():
@@ -256,9 +294,14 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:
                 jugador.x = max(0, jugador.x - velocidad_jugador)
-            if keys[pygame.K_RIGHT]:
-                jugador.x = min(w - jugador.width, jugador.x + velocidad_jugador)
-            
+            elif keys[pygame.K_RIGHT]:
+                jugador.x = min(w//10, jugador.x + velocidad_jugador)
+            else:
+                if jugador.x < 50:
+                    jugador.x = min(50, jugador.x + velocidad_jugador)
+                elif jugador.x > 50:
+                    jugador.x = max(50, jugador.x - velocidad_jugador)
+
             if not modo_auto:
                 if salto:
                     manejar_salto()
@@ -271,6 +314,8 @@ def main():
             # Actualizar el juego
             if not bala_disparada:
                 disparar_bala()
+            if not bala_disparada2:
+                disparar_segunda_bala()
             update()
 
         # Actualizar la pantalla
