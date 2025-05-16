@@ -1,0 +1,8 @@
+opencv-contrib-python
+sift
+scikit-learn
+numpy
+pandas
+pygame
+matplotlib
+tensorflow

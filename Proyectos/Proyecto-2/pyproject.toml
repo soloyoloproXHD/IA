@@ -13,6 +13,7 @@ numpy = "*"
 pandas = "*"
 pygame = "*"
 matplotlib = "*"
+tensorflow = "*"
 
 
 [build-system]

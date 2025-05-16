@@ -1,7 +1,11 @@
 import pygame
 import random
 import cv2 as cv
+import numpy as np
 from arbolDecision import generar_arbol
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras import Input
 
 # Inicializar Pygame
 pygame.init()
@@ -91,6 +95,35 @@ fondo_x2 = w
 # Ajustar el desplazamiento para centrar el asset en la hitbox sin mover la posición:
 offset_x = (jugador.width - w_p) // 2
 offset_y = jugador.height - h_p
+
+
+modelo_nn = None 
+
+def red_neuronal():
+    global modelo_nn
+    datos = np.array(datos_modelo, dtype=float)
+    X = datos[:, :3]
+    y = datos[:, 3].astype(int)
+    
+    from tensorflow.keras.utils import to_categorical
+
+    y_cat = to_categorical(y, num_classes=3)
+    
+    modelo = Sequential([
+        Input(shape=(X.shape[1],)),
+        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
+        Dense(3, activation='softmax'),
+    ])
+    
+    modelo.compile(optimizer='adam',
+                   loss='binary_crossentropy',
+                   metrics=['accuracy'])
+    
+    print("Entrenando red neuronal…")
+    modelo.fit(X, y_cat, epochs=200, batch_size=32, verbose=1)
+    modelo_nn = modelo
+    print("Entrenamiento completado.")
 
 # Función para disparar la bala
 def disparar_bala():
@@ -188,11 +221,20 @@ def update():
 
 # Función para guardar datos del modelo en modo manual
 def guardar_datos():
-    global jugador, bala, velocidad_bala, salto
+    global jugador, bala, bala2, velocidad_bala, salto
+    
     distancia = abs(jugador.x - bala.x)  # Distancia entre el jugador y la bala
-    salto_hecho = 1 if salto else 0  # 1 si saltó, 0 si no saltó
+    distancia2 = abs(jugador.y - bala2.y)
+    
+    accion = 0
+    
+    if salto:
+        accion = 1
+    elif jugador.x < 40 or jugador.x > 60:
+        accion = 2
+        
     # Guardar velocidad de la bala, distancia al jugador y si saltó o no
-    datos_modelo.append([velocidad_bala, distancia, salto_hecho])
+    datos_modelo.append([velocidad_bala, distancia, distancia2, accion])
 
 # Función para pausar el juego y guardar los datos
 def pausa_juego():
@@ -228,19 +270,35 @@ def mostrar_menu():
                     print("Juego terminado. Datos recopilados:", datos_modelo)
                     pygame.quit()
                     exit()
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_1:
+                    red_neuronal()
 
 def menu_modelos():
+    global menu_activo, modo_auto, modelo_nn
     pantalla.fill(GRIS)
-    modelo1 = fuente.render("1.- Red Neuronal", True, BLANCO)
-    modelo2 = fuente.render("2.- Arbol de Desición", True, BLANCO)
-    modelo3 = fuente.render("3.- Regresión Lineal", True, BLANCO)
-    modelo4 = fuente.render("4.- K Neighborn", True, BLANCO)
-    pantalla.blit(modelo1, (w//4, h//5.5))
-    pantalla.blit(modelo2, (w//4, h//4))
-    pantalla.blit(modelo3, (w//4, h//3))
-    pantalla.blit(modelo4, (w//4, h//2.5))
+    pantalla.blit(fuente.render("1.- Red Neuronal", True, BLANCO), (w//4, h//5.5))
+    pantalla.blit(fuente.render("2.- Arbol de Desición", True, BLANCO), (w//4, h//4))
+    pantalla.blit(fuente.render("3.- Regresión Lineal", True, BLANCO), (w//4, h//3))
+    pantalla.blit(fuente.render("4.- K Neighborn", True, BLANCO), (w//4, h//2.5))
     pygame.display.flip()
-    
+
+    # Bucle hasta pulsar 1-4 o cerrar
+    while True:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.quit(); exit()
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_1:
+                    red_neuronal()        # entrena
+                    modo_auto = True      # activa modo auto
+                    menu_activo = False   # cierra menú
+                    return
+                elif e.key == pygame.K_2:
+                    # aquí podrías entrenar o cargar tu árbol
+                    pass
+                # elif para K_3, K_4…
+
 # Función para generar el árbol de decisión al finalizar el juego
 def generar_arbol_decision():
     global datos_modelo
@@ -258,6 +316,7 @@ def reiniciar_juego():
     menu_activo = True  # Activar de nuevo el menú
     jugador.x, jugador.y = 50, h - 100  # Reiniciar posición del jugador
     bala.x = w - 50  # Reiniciar posición de la bala
+    bala2.y = h//8  # Reiniciar posición de la segunda bala
     nave.x, nave.y = w - 100, h - 100  # Reiniciar posición de la nave
     bala_disparada = False
     salto = False
@@ -290,26 +349,52 @@ def main():
                     exit()
 
         if not pausa:
-            # Modo manual: el jugador controla el movimiento del personaje
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                jugador.x = max(0, jugador.x - velocidad_jugador)
-            elif keys[pygame.K_RIGHT]:
-                jugador.x = min(w//10, jugador.x + velocidad_jugador)
-            else:
-                if jugador.x < 50:
-                    jugador.x = min(50, jugador.x + velocidad_jugador)
-                elif jugador.x > 50:
-                    jugador.x = max(50, jugador.x - velocidad_jugador)
-
+            
             if not modo_auto:
+                
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_LEFT]:
+                    jugador.x = max(0, jugador.x - velocidad_jugador)
+                elif keys[pygame.K_RIGHT]:
+                    jugador.x = min(w//10, jugador.x + velocidad_jugador)
+                else:
+                    if jugador.x < 50:
+                        jugador.x = min(50, jugador.x + velocidad_jugador)
+                    elif jugador.x > 50:
+                        jugador.x = max(50, jugador.x - velocidad_jugador)
+                
                 if salto:
                     manejar_salto()
                 # Guardar los datos si estamos en modo manual
                 guardar_datos()
+            
             else:
-                #logica del modo auto
-                pass
+                if modelo_nn:
+                    x_input = np.array([[velocidad_bala, abs(jugador.x - bala.x), abs(jugador.y - bala2.y)]])
+                    pred = modelo_nn.predict(x_input, verbose=0)[0]
+                    accion = np.argmax(pred)
+
+                    if accion == 1 and en_suelo:  # Esquivar bala
+                        salto = True
+                        en_suelo = False
+                    elif accion == 2:  # Esquivar bala2
+                        if abs(bala2.x - jugador.x) < jugador.width:
+                            # Moverse hacia la izquierda
+                            if jugador.x > 10:
+                                jugador.x -= velocidad_jugador - 10
+                            # Sino, hacia la derecha
+                            elif jugador.x < w//10 - jugador.width:
+                                jugador.x += velocidad_jugador + 10
+                    else:
+                        # Volver al centro si no hace nada
+                        if jugador.x < 50:
+                            jugador.x = min(50, jugador.x + velocidad_jugador)
+                        elif jugador.x > 50:
+                            jugador.x = max(50, jugador.x - velocidad_jugador)
+                    
+                    if salto:
+                        manejar_salto()
+
 
             # Actualizar el juego
             if not bala_disparada:
@@ -326,3 +411,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
