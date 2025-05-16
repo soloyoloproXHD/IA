@@ -377,15 +377,15 @@ def main():
                     if accion == 1 and en_suelo:  # Esquivar bala
                         salto = True
                         en_suelo = False
-                    elif accion == 2:  # Esquivar bala2
-                        if abs(bala2.x - jugador.x) < jugador.width:
-                            # Moverse hacia la izquierda
-                            if jugador.x > 10:
-                                jugador.x -= velocidad_jugador - 10
-                            # Sino, hacia la derecha
-                            elif jugador.x < w//10 - jugador.width:
+                    if accion == 2:  # Esquivar bala2
+                       if abs(bala2.x - jugador.x) < jugador.width:
+                           # Moverse hacia la izquierda
+                           if jugador.x > 10:
+                               jugador.x -= velocidad_jugador - 10
+                           # Sino, hacia la derecha
+                           elif jugador.x < w//10 - jugador.width:
                                 jugador.x += velocidad_jugador + 10
-                    else:
+                    if accion == 0:
                         # Volver al centro si no hace nada
                         if jugador.x < 50:
                             jugador.x = min(50, jugador.x + velocidad_jugador)
