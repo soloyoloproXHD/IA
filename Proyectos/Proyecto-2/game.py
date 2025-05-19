@@ -6,6 +6,10 @@ from arbolDecision import generar_arbol
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras import Input
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
+
 
 # Inicializar Pygame
 pygame.init()
@@ -97,7 +101,9 @@ offset_x = (jugador.width - w_p) // 2
 offset_y = jugador.height - h_p
 
 
-modelo_nn = None 
+modelo_nn = None
+modelo_arbol = None
+modelo_knn = None
 
 def red_neuronal():
     global modelo_nn
@@ -107,13 +113,13 @@ def red_neuronal():
     
     from tensorflow.keras.utils import to_categorical
 
-    y_cat = to_categorical(y, num_classes=3)
+    y_cat = to_categorical(y, num_classes=4)
     
     modelo = Sequential([
         Input(shape=(X.shape[1],)),
         Dense(64, activation='relu'),
         Dense(32, activation='relu'),
-        Dense(3, activation='softmax'),
+        Dense(4, activation='softmax'),
     ])
     
     modelo.compile(optimizer='adam',
@@ -124,6 +130,41 @@ def red_neuronal():
     modelo.fit(X, y_cat, epochs=200, batch_size=32, verbose=1)
     modelo_nn = modelo
     print("Entrenamiento completado.")
+
+def generar_arbol_decision():
+    global datos_modelo, modelo_arbol
+    
+    if not datos_modelo:
+        print("No hay datos suficientes para generar el árbol de decisión.")
+        return
+    datos = np.array(datos_modelo, dtype=float)
+    X = datos[:, :3]
+    y = datos[:, 3].astype(int)
+    
+    modelo = DecisionTreeClassifier(max_depth=5)
+    modelo.fit(X, y)
+    modelo_arbol = modelo
+    
+    print("Árbol de decisión entrenado tilín.")
+    #print("Datos recopilados para el modelo:", datos_modelo)
+    #generar_arbol(datos_modelo, columnas, clases)
+
+def generar_knn():
+    global datos_modelo, modelo_knn
+    
+    if not datos_modelo:
+        print("No hay datos suficientes para generar el KNN.")
+        return
+    
+    datos = np.array(datos_modelo, dtype=float)
+    X = datos[:, :3]
+    y = datos[:, 3].astype(int)
+    
+    modelo = KNeighborsClassifier(n_neighbors=3)
+    modelo.fit(X, y)
+    
+    modelo_knn = modelo
+    print("KNN entrenado tilín.")
 
 # Función para disparar la bala
 def disparar_bala():
@@ -166,7 +207,7 @@ def manejar_salto():
 
 # Función para actualizar el juego
 def update():
-    global bala, bala2, velocidad_bala, velocidad_bala2, current_frame, frame_count, fondo_x1, fondo_x2
+    global bala, bala2, velocidad_bala, velocidad_bala2, current_frame, frame_count, fondo_x1, fondo_x2, modelo_nn, modelo_arbol
 
     # Mover el fondo
     fondo_x1 -= 1
@@ -212,12 +253,15 @@ def update():
     pantalla.blit(bala2_img, (bala2.x, bala2.y))
 
     # Colisión entre la bala y el jugador
-    if jugador.colliderect(bala):
+    if (jugador.colliderect(bala) and modo_auto) or (jugador.colliderect(bala2) and modo_auto):
+        modelo_nn = None
+        modelo_arbol = None
         print("Colisión detectada!")
         reiniciar_juego()  # Terminar el juego y mostrar el menú
-    if jugador.colliderect(bala2):
+    
+    if jugador.colliderect(bala) or jugador.colliderect(bala2):
         print("Colisión detectada!")
-        reiniciar_juego()
+        reiniciar_juego()  # Terminar el juego y mostrar el menú
 
 # Función para guardar datos del modelo en modo manual
 def guardar_datos():
@@ -230,10 +274,14 @@ def guardar_datos():
     
     if salto:
         accion = 1
-    elif jugador.x < 40 or jugador.x > 60:
-        accion = 2
+    else:
         
-    # Guardar velocidad de la bala, distancia al jugador y si saltó o no
+        if jugador.x < 50 - jugador.width//2:
+            accion = 2
+        if jugador.x > 50 + jugador.width//2:
+            accion = 3
+    
+    # Guardar velocidad de la bala, distancia vertical y horizontal y la acción
     datos_modelo.append([velocidad_bala, distancia, distancia2, accion])
 
 # Función para pausar el juego y guardar los datos
@@ -279,8 +327,7 @@ def menu_modelos():
     pantalla.fill(GRIS)
     pantalla.blit(fuente.render("1.- Red Neuronal", True, BLANCO), (w//4, h//5.5))
     pantalla.blit(fuente.render("2.- Arbol de Desición", True, BLANCO), (w//4, h//4))
-    pantalla.blit(fuente.render("3.- Regresión Lineal", True, BLANCO), (w//4, h//3))
-    pantalla.blit(fuente.render("4.- K Neighborn", True, BLANCO), (w//4, h//2.5))
+    pantalla.blit(fuente.render("3.- K Neighborn", True, BLANCO), (w//4, h//3))
     pygame.display.flip()
 
     # Bucle hasta pulsar 1-4 o cerrar
@@ -290,25 +337,21 @@ def menu_modelos():
                 pygame.quit(); exit()
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_1:
-                    red_neuronal()        # entrena
-                    modo_auto = True      # activa modo auto
-                    menu_activo = False   # cierra menú
+                    red_neuronal()
+                    modo_auto = True
+                    menu_activo = False
                     return
                 elif e.key == pygame.K_2:
-                    # aquí podrías entrenar o cargar tu árbol
-                    pass
-                # elif para K_3, K_4…
-
-# Función para generar el árbol de decisión al finalizar el juego
-def generar_arbol_decision():
-    global datos_modelo
-    if not datos_modelo:
-        print("No hay datos suficientes para generar el árbol de decisión.")
-        return
-    columnas = [ "Distancia", "Salto"]
-    clases = ["No Salta", "Salta"]
-    print("Datos recopilados para el modelo:", datos_modelo)  # Verificar los datos
-    #generar_arbol(datos_modelo, columnas, clases)
+                    generar_arbol_decision()
+                    modo_auto = True
+                    menu_activo = False
+                    return
+                elif e.key == pygame.K_3:
+                    generar_knn()
+                    modo_auto = True
+                    menu_activo = False
+                    return
+                # elif para K_3
 
 # Función para reiniciar el juego tras la colisión
 def reiniciar_juego():
@@ -323,8 +366,26 @@ def reiniciar_juego():
     en_suelo = True
     # Mostrar los datos recopilados hasta el momento
     print("Datos recopilados para el modelo: ", datos_modelo)
-    generar_arbol_decision()  # Generar el árbol de decisión
     mostrar_menu()  # Mostrar el menú de nuevo para seleccionar modo
+
+def logica_auto(accion):
+    global salto, en_suelo
+    if accion == 1 and en_suelo:  # Esquivar bala
+        salto = True
+        en_suelo = False
+    if accion == 2:  # Esquivar bala2
+        jugador.x = max(0, jugador.x - velocidad_jugador)  # Moverse hacia la izquierda
+    if accion == 3:
+        jugador.x = min(w//10, jugador.x + velocidad_jugador)  # Moverse hacia la derecha
+    if accion == 0:
+        # Volver al centro si no hace nada
+        if jugador.x < 50:
+            jugador.x = min(50, jugador.x + velocidad_jugador)
+        elif jugador.x > 50:
+            jugador.x = max(50, jugador.x - velocidad_jugador)
+                    
+    if salto:
+        manejar_salto()
 
 def main():
     global salto, en_suelo, bala_disparada
@@ -369,31 +430,29 @@ def main():
                 guardar_datos()
             
             else:
+                x_input = np.array([[velocidad_bala, abs(jugador.x - bala.x), abs(jugador.y - bala2.y)]])
+                accion = None
                 if modelo_nn:
-                    x_input = np.array([[velocidad_bala, abs(jugador.x - bala.x), abs(jugador.y - bala2.y)]])
+                    
                     pred = modelo_nn.predict(x_input, verbose=0)[0]
                     accion = np.argmax(pred)
-
-                    if accion == 1 and en_suelo:  # Esquivar bala
-                        salto = True
-                        en_suelo = False
-                    if accion == 2:  # Esquivar bala2
-                       if abs(bala2.x - jugador.x) < jugador.width:
-                           # Moverse hacia la izquierda
-                           if jugador.x > 10:
-                               jugador.x -= velocidad_jugador - 10
-                           # Sino, hacia la derecha
-                           elif jugador.x < w//10 - jugador.width:
-                                jugador.x += velocidad_jugador + 10
-                    if accion == 0:
-                        # Volver al centro si no hace nada
-                        if jugador.x < 50:
-                            jugador.x = min(50, jugador.x + velocidad_jugador)
-                        elif jugador.x > 50:
-                            jugador.x = max(50, jugador.x - velocidad_jugador)
                     
-                    if salto:
-                        manejar_salto()
+                    logica_auto(accion)
+                    print("Predicción de la red neuronal:", accion)
+
+                    
+                elif modelo_arbol:
+                    accion = modelo_arbol.predict(x_input)[0]
+                    
+                    logica_auto(accion)
+                    print("Predicción del árbol de decisión:", accion)
+                    
+                elif modelo_knn:
+                    accion = modelo_knn.predict(x_input)[0]
+                    logica_auto(accion)
+                    print("Predicción del KNN:", accion)
+                    
+                    
 
 
             # Actualizar el juego
