@@ -4,7 +4,8 @@ import cv2 as cv
 import numpy as np
 #from arbolDecision import generar_arbol
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense    
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import Input
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -44,6 +45,10 @@ pausa = False
 fuente = pygame.font.SysFont('Arial', 24)
 menu_activo = True
 modo_auto = False  # Indica si el modo de juego es automático
+
+m_neuronal = False
+m_arbol = False
+m_knn = False
 
 # Lista para guardar los datos de velocidad, distancia y salto (target)
 datos_modelo = []
@@ -89,7 +94,7 @@ frame_count = 0
 velocidad_bala = -10  # Velocidad de la bala hacia la izquierda
 bala_disparada = False
 
-velocidad_bala2 = 8
+velocidad_bala2 = 5
 bala_disparada2 = False
 
 # Variables para el fondo en movimiento
@@ -105,38 +110,50 @@ modelo_nn = None
 modelo_arbol = None
 modelo_knn = None
 
+def limpiar_modelos():
+    global modelo_nn, modelo_arbol, modelo_knn, m_neuronal, m_arbol, m_knn
+    modelo_nn = None
+    modelo_arbol = None
+    modelo_knn = None
+    m_neuronal = False
+    m_arbol = False
+    m_knn = False
+
 def red_neuronal():
-    global modelo_nn
+    global datos_modelo, modelo_nn, menu_activo
+    
+    if not datos_modelo:
+        return False
+    
     datos = np.array(datos_modelo, dtype=float)
     X = datos[:, :3]
     y = datos[:, 3].astype(int)
-    
-    from tensorflow.keras.utils import to_categorical
 
-    y_cat = to_categorical(y, num_classes=4)
+    #y_cat = to_categorical(y, num_classes=4)
     
     modelo = Sequential([
         Input(shape=(X.shape[1],)),
-        Dense(64, activation='sigmoid'),
-        Dense(32, activation='sigmoid'),
+        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
         Dense(4, activation='softmax'),
     ])
     
     modelo.compile(optimizer='adam',
-                   loss='categorical_crossentropy',
+                   loss='sparse_categorical_crossentropy',
                    metrics=['accuracy'])
     
     print("Entrenando red neuronal…")
-    modelo.fit(X, y_cat, epochs=200, batch_size=32, verbose=1)
+    modelo.fit(X, y, epochs=200, batch_size=32, verbose=1)
     modelo_nn = modelo
     print("Entrenamiento completado.")
+    return True
 
 def generar_arbol_decision():
     global datos_modelo, modelo_arbol
     
     if not datos_modelo:
-        print("No hay datos suficientes para generar el árbol de decisión.")
-        return
+        return False
+    
     datos = np.array(datos_modelo, dtype=float)
     X = datos[:, :3]
     y = datos[:, 3].astype(int)
@@ -148,6 +165,7 @@ def generar_arbol_decision():
     print("Árbol de decisión entrenado tilín.")
     #print("Datos recopilados para el modelo:", datos_modelo)
     #generar_arbol(datos_modelo, columnas, clases)
+    return True
 
 def generar_knn():
     global datos_modelo, modelo_knn
@@ -207,7 +225,7 @@ def manejar_salto():
 
 # Función para actualizar el juego
 def update():
-    global bala, bala2, velocidad_bala, velocidad_bala2, current_frame, frame_count, fondo_x1, fondo_x2, modelo_nn, modelo_arbol
+    global bala, bala2, velocidad_bala, velocidad_bala2, current_frame, frame_count, fondo_x1, fondo_x2, modelo_nn, modelo_arbol, modelo_knn, m_neuronal, m_arbol, m_knn
 
     # Mover el fondo
     fondo_x1 -= 1
@@ -252,13 +270,15 @@ def update():
     pantalla.blit(bala_img, (bala.x, bala.y))
     pantalla.blit(bala2_img, (bala2.x, bala2.y))
 
-    # Colisión entre la bala y el jugador
+    # Colisión entre la bala y el jugador en modo automático
     if (jugador.colliderect(bala) and modo_auto) or (jugador.colliderect(bala2) and modo_auto):
-        modelo_nn = None
-        modelo_arbol = None
+        m_neuronal = False
+        m_arbol = False
+        m_knn = False
         print("Colisión detectada!")
         reiniciar_juego()  # Terminar el juego y mostrar el menú
     
+    # Colisión entre la bala y el jugador en modo manual
     if jugador.colliderect(bala) or jugador.colliderect(bala2):
         print("Colisión detectada!")
         reiniciar_juego()  # Terminar el juego y mostrar el menú
@@ -295,7 +315,7 @@ def pausa_juego():
 
 # Función para mostrar el menú y seleccionar el modo de juego
 def mostrar_menu():
-    global menu_activo, modo_auto
+    global menu_activo, modo_auto, modelo_nn
     pantalla.fill(NEGRO)
     texto = fuente.render("Presiona 'A' para Auto, 'M' para Manual, o 'Q' para Salir", True, BLANCO)
     pantalla.blit(texto, (w // 4, h // 2))
@@ -314,43 +334,58 @@ def mostrar_menu():
                 elif evento.key == pygame.K_m:
                     modo_auto = False
                     menu_activo = False
-                    datos_modelo = None
+                    datos_modelo = []
+                    modelo_nn = None
                 elif evento.key == pygame.K_q:
                     print("Juego terminado. Datos recopilados:", datos_modelo)
                     pygame.quit()
                     exit()
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_1:
-                    red_neuronal()
 
 def menu_modelos():
-    global menu_activo, modo_auto, modelo_nn
+    global menu_activo, modo_auto, modelo_nn, m_arbol, m_knn, m_neuronal
     pantalla.fill(GRIS)
     pantalla.blit(fuente.render("1.- Red Neuronal", True, BLANCO), (w//4, h//5.5))
     pantalla.blit(fuente.render("2.- Arbol de Desición", True, BLANCO), (w//4, h//4))
     pantalla.blit(fuente.render("3.- K Neighborn", True, BLANCO), (w//4, h//3))
+    pantalla.blit(fuente.render("ESC.- Regresar al menú anterior", True, BLANCO), (w//4, h//2))
     pygame.display.flip()
 
-    # Bucle hasta pulsar 1-4 o cerrar
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit(); exit()
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_1:
-                    red_neuronal()
-                    modo_auto = True
-                    menu_activo = False
-                    return
+                    limpiar_modelos()
+                    red = red_neuronal()
+                    
+                    if red:
+                        modo_auto = True
+                        menu_activo = False
+                        m_neuronal = True
+                        return
+                    else:
+                        print("No hay datos suficientes para generar la red neuronal.")
                 elif e.key == pygame.K_2:
-                    generar_arbol_decision()
-                    modo_auto = True
-                    menu_activo = False
-                    return
+                    limpiar_modelos()
+                    arbol = generar_arbol_decision()
+                    
+                    if arbol:
+                        modo_auto = True
+                        menu_activo = False
+                        m_arbol = True
+                        return
+                    else:
+                        print("No hay datos suficientes para generar el árbol de decisión.")
                 elif e.key == pygame.K_3:
+                    limpiar_modelos()
                     generar_knn()
                     modo_auto = True
                     menu_activo = False
+                    m_knn = True
+                    return
+                elif e.key == pygame.K_ESCAPE:
+                    mostrar_menu()
                     return
                 # elif para K_3
 
@@ -407,7 +442,7 @@ def main():
                     pausa_juego()
                     mostrar_menu()
                 if evento.key == pygame.K_q:  # Presiona 'q' para terminar el juego
-                    print("Juego terminado. Datos recopilados:", datos_modelo)
+                    #print("Juego terminado. Datos recopilados:", datos_modelo)
                     pygame.quit()
                     exit()
 
@@ -435,25 +470,26 @@ def main():
                 x_input = np.array([[velocidad_bala, abs(jugador.x - bala.x), abs(jugador.y - bala2.y)]])
                 accion = None
                 if modelo_nn:
-                    
-                    pred = modelo_nn.predict(x_input, verbose=0)[0]
-                    accion = np.argmax(pred)
-                    
-                    logica_auto(accion)
-                    print("Vector de salidas de la red neuronal:", pred)
-                    print("Predicción de la red neuronal:", accion)
+                    if m_neuronal:
+                        pred = modelo_nn.predict(x_input, verbose=0)[0]
+                        accion = np.argmax(pred)
+                        
+                        logica_auto(accion)
+                        print("Vector de salidas de la red neuronal:", pred)
+                        print("Predicción de la red neuronal:", accion)
 
+                if modelo_arbol:
+                    if m_arbol:
+                        accion = modelo_arbol.predict(x_input)[0]
                     
-                elif modelo_arbol:
-                    accion = modelo_arbol.predict(x_input)[0]
+                        logica_auto(accion)
+                        print("Predicción del árbol de decisión:", accion)
                     
-                    logica_auto(accion)
-                    print("Predicción del árbol de decisión:", accion)
-                    
-                elif modelo_knn:
-                    accion = modelo_knn.predict(x_input)[0]
-                    logica_auto(accion)
-                    print("Predicción del KNN:", accion)
+                if modelo_knn:
+                    if m_knn:
+                        accion = modelo_knn.predict(x_input)[0]
+                        logica_auto(accion)
+                        print("Predicción del KNN:", accion)
                     
                     
 
