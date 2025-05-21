@@ -3,12 +3,11 @@ import random
 import cv2 as cv
 import numpy as np
 #from arbolDecision import generar_arbol
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense    
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import Input
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -109,6 +108,7 @@ offset_y = jugador.height - h_p
 modelo_nn = None
 modelo_arbol = None
 modelo_knn = None
+scaler_nn = None
 
 def limpiar_modelos():
     global modelo_nn, modelo_arbol, modelo_knn, m_neuronal, m_arbol, m_knn
@@ -120,7 +120,7 @@ def limpiar_modelos():
     m_knn = False
 
 def red_neuronal():
-    global datos_modelo, modelo_nn, menu_activo
+    global datos_modelo, modelo_nn, menu_activo, scaler_nn
     
     if not datos_modelo:
         return False
@@ -129,21 +129,18 @@ def red_neuronal():
     X = datos[:, :3]
     y = datos[:, 3].astype(int)
 
-    #y_cat = to_categorical(y, num_classes=4)
+    scaler_nn = StandardScaler()
+    X = scaler_nn.fit_transform(X)  # Normalizar los datos
     
-    modelo = Sequential([
-        Input(shape=(X.shape[1],)),
-        Dense(64, activation='relu'),
-        Dense(32, activation='relu'),
-        Dense(4, activation='softmax'),
-    ])
-    
-    modelo.compile(optimizer='adam',
-                   loss='sparse_categorical_crossentropy',
-                   metrics=['accuracy'])
+    modelo = MLPClassifier(
+        hidden_layer_sizes=(30,),
+        max_iter=4000,
+        random_state=42,
+        activation='relu',
+    )
     
     print("Entrenando red neuronal…")
-    modelo.fit(X, y, epochs=200, batch_size=32, verbose=1)
+    modelo.fit(X, y)
     modelo_nn = modelo
     print("Entrenamiento completado.")
     return True
@@ -471,11 +468,11 @@ def main():
                 accion = None
                 if modelo_nn:
                     if m_neuronal:
-                        pred = modelo_nn.predict(x_input, verbose=0)[0]
-                        accion = np.argmax(pred)
+                        x_input_scaler = scaler_nn.transform(x_input)
+                        accion = modelo_nn.predict(x_input_scaler)[0]
                         
                         logica_auto(accion)
-                        print("Vector de salidas de la red neuronal:", pred)
+                        print("Vector de salidas de la red neuronal:", x_input_scaler)
                         print("Predicción de la red neuronal:", accion)
 
                 if modelo_arbol:
