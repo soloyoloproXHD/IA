@@ -2,7 +2,7 @@ import pygame
 import random
 import cv2 as cv
 import numpy as np
-from arbolDecision import generar_arbol
+#from arbolDecision import generar_arbol
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras import Input
@@ -117,13 +117,13 @@ def red_neuronal():
     
     modelo = Sequential([
         Input(shape=(X.shape[1],)),
-        Dense(64, activation='relu'),
-        Dense(32, activation='relu'),
+        Dense(64, activation='sigmoid'),
+        Dense(32, activation='sigmoid'),
         Dense(4, activation='softmax'),
     ])
     
     modelo.compile(optimizer='adam',
-                   loss='binary_crossentropy',
+                   loss='categorical_crossentropy',
                    metrics=['accuracy'])
     
     print("Entrenando red neuronal…")
@@ -314,6 +314,7 @@ def mostrar_menu():
                 elif evento.key == pygame.K_m:
                     modo_auto = False
                     menu_activo = False
+                    datos_modelo = None
                 elif evento.key == pygame.K_q:
                     print("Juego terminado. Datos recopilados:", datos_modelo)
                     pygame.quit()
@@ -404,6 +405,7 @@ def main():
                     en_suelo = False
                 if evento.key == pygame.K_p:  # Presiona 'p' para pausar el juego
                     pausa_juego()
+                    mostrar_menu()
                 if evento.key == pygame.K_q:  # Presiona 'q' para terminar el juego
                     print("Juego terminado. Datos recopilados:", datos_modelo)
                     pygame.quit()
@@ -438,6 +440,7 @@ def main():
                     accion = np.argmax(pred)
                     
                     logica_auto(accion)
+                    print("Vector de salidas de la red neuronal:", pred)
                     print("Predicción de la red neuronal:", accion)
 
                     
