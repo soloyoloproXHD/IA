@@ -1,11 +1,11 @@
-# Documentación del Algoritmo A* con Python
+# 📝 Documentación del Algoritmo A* con Python
 
-## Objetivo
+## 🏹  Objetivo
 EL objetivo de este proyecto es demostrar el funcionamiento del algoritmo **`A*`** cuya funcionalidad es encontrar el camino más rapido entre un punto **`A`** y un punto **`B`**, en este proyecto la busqueda del camino se lleva a cabo dentro de una cuadricula simetrica **`(..., 10*10, 11*11, 12*12,...)`** donde el costo de desplazamiento **`vertical`** y **`horizontal`** es de **`10`**, ahora, en el caso del costo para el desplazamiento en **`diagonal`** es de **`14`**.
 
 ---
 
-## Configuración Inicial
+## 🟦 Configuración Inicial
 
 Se define el tamaño de la ventana y se establecen los colores que se utilizarán en la representación visual:
 
@@ -57,7 +57,7 @@ class Nodo:
 > - **`h`**: Estimación de costo desde el nodo actual hasta el nodo objetivo.
 > - **`f`**: Suma de **`g`** y **`h`** que representa el costo total de desplazamiento.
 
-### Métodos Importantes
+### 🟥 Métodos Importantes
 
 Algunos métodos de `Nodo` permiten cambiar su estado:
 
@@ -98,7 +98,7 @@ def hacer_camino(self):
 
 ---
 
-## Algoritmo A*
+## `*️⃣` Algoritmo A*
 
 El algoritmo implementado evalúa los nodos vecinos y elige el camino óptimo basado en el costo total `f`.
 
@@ -143,7 +143,7 @@ def a_estrella(dibujar, grid, inicio, fin):
 
 ---
 
-## Función `h`: Heurística Manhattan
+## 🏙️ Función `h`: Heurística Manhattan
 
 Se utiliza la distancia Manhattan como heurística para estimar el costo restante.
 
@@ -159,7 +159,7 @@ def h(p1, p2):
 
 ---
 
-## Interacción con el Usuario
+## 🧑‍💻 Interacción con el Usuario
 
 Se permiten los siguientes controles:
 
@@ -181,4 +181,73 @@ if event.type == pygame.KEYDOWN:
 > **Importante:**
 > El algoritmo solo se ejecuta si el usuario ha definido un nodo de inicio y un nodo de fin.
 
-## Fundamento de resolución para el problema de los canivales
+---
+
+# 🍖 Fundamento de resolución para el problema de los canivales
+
+> Perdone si lo que escribí a continuación son puras weas 💀
+
+## Representación del Estado
+
+Cada estado se define por una tupla `(M, C, B)` donde:
+
+- `M`: Número de misioneros en la orilla izquierda.
+- `C`: Número de caníbales en la orilla izquierda.
+- `B`: Posición de la barca:
+  - `0`: La barca está en la orilla izquierda.
+  - `1`: La barca está en la orilla derecha.
+
+### Ejemplo de estados:
+- `(3, 3, 0)`: Estado inicial — todos en la orilla izquierda.
+- `(0, 0, 1)`: Estado objetivo — todos en la orilla derecha.
+
+---
+
+## 💵 Función de Costo `g(n)`
+
+- Cada cruce del río se considera un paso con costo uniforme:  
+  `g(n) = número de pasos realizados desde el inicio`.
+
+---
+
+## 🏙️ Función Heurística `h(n)` — Distancia de Manhattan
+
+La heurística estima el número mínimo de cruces necesarios para llevar a todas las personas restantes a la otra orilla.
+
+## 📉 Función de Evaluación `f(n)`
+
+El algoritmo A* utiliza:
+
+\[
+f(n) = g(n) + h(n)
+\]
+
+Donde:
+- `g(n)`: Costo real desde el nodo inicial hasta el nodo actual.
+- `h(n)`: Estimación del costo desde el nodo actual hasta el nodo objetivo.
+
+---
+
+## 📏 Reglas y Restricciones del Problema
+
+Al generar estados vecinos, se deben cumplir las siguientes condiciones:
+
+- Nunca debe haber más caníbales que misioneros en una orilla.
+- La barca puede transportar entre 1 y 2 personas.
+- No se deben repetir estados ya visitados.
+
+---
+
+## `*️⃣` Proceso del Algoritmo A*
+
+1. Inicializar con el estado `(3, 3, 0)`.
+2. Generar estados vecinos válidos según las reglas.
+3. Evaluar `f(n)` para cada nuevo estado.
+4. Elegir el estado con menor `f(n)` para continuar la búsqueda.
+5. Repetir hasta alcanzar el estado objetivo `(0, 0, 1)`.
+
+# 💀 Conclusiones
+
+Verdaderamente este proyecto salio porque dios me vió a los ojos, no vale la pena validar el moviemiento en diagonal, casi se me quema el cerebro intentando definir la logica para eso.
+
+> Aquí dejo el enlace a la pagina de los emojis, estan bonitos: https://yaytext.com/es/emoji/
